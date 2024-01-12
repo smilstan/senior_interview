@@ -22,8 +22,6 @@ ApplicationWindow {
 
     GridView {
         id: gridView
-        cellWidth: 75
-        cellHeight: 75
         anchors.fill: parent
 
         model: DragDropDelegateModel {
@@ -41,7 +39,7 @@ ApplicationWindow {
 
     DownloadProgressPopup {
         id: downloadProgressPopup
-        maxItemsCount: client.getMaxItemsCount()
+        maxItemsCount: client ? client.getMaxItemsCount() : 0
 
         onTerminateDownload: {
             client.terminateDownloadProcess()
@@ -55,7 +53,6 @@ ApplicationWindow {
         }
 
         onDownloadStateChanged: {
-            print(client.downloadState)
             if ( client.downloadState ) {
                 downloadProgressPopup.open()
             } else {

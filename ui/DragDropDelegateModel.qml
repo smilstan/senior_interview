@@ -17,8 +17,8 @@ DelegateModel {
 
         MouseArea {
             id: dragArea
-            width: 75
-            height: 75
+            width: dragItemRct.width
+            height: dragItemRct.height
             acceptedButtons: Qt.LeftButton | Qt.RightButton
 
             drag.target: held ? dragItemRct : undefined
@@ -44,8 +44,8 @@ DelegateModel {
 
             Rectangle {
                 id: dragItemRct
-                width: 75
-                height: 75
+                width: 100
+                height: 100
                 radius: 10
                 color: modelData
                 anchors {
@@ -56,8 +56,10 @@ DelegateModel {
                 states: [
                     State {
                         when: dragArea.held
-
+                        // to make able freely move dragged item next steps are required:
+                        // 1. re-bind current item to the outer container, i.e. GridView
                         ParentChange { target: dragItemRct; parent: visualModel.parentContainer }
+                        // 2. in addition to unbind reset anchoring to the MouseArea
                         AnchorChanges {
                             target: dragItemRct
                             anchors { horizontalCenter: undefined; verticalCenter: undefined }
@@ -67,29 +69,6 @@ DelegateModel {
                 ]
 
                 Behavior on scale { NumberAnimation{ duration: 100 } }
-
-                SequentialAnimation {
-                    id: shakeAnim
-                    loops: Animation.Infinite
-                    running: visualModel.itemHeld && !dragArea.held
-
-                    RotationAnimation {
-                        target: dragItemRct
-                        to: 3
-                        duration: 120
-                    }
-                    RotationAnimation {
-                        target: dragItemRct
-                        to: -3
-                        duration: 120
-                    }
-
-                    onRunningChanged: {
-                        if ( !running ) {
-                            dragItemRct.rotation = 0
-                        }
-                    }
-                }
 
                 Drag.active: dragArea.held
                 Drag.source: dragArea
@@ -102,6 +81,30 @@ DelegateModel {
 
                 onEntered: {
                     visualModel.items.move(drag.source.DelegateModel.itemsIndex, dragArea.DelegateModel.itemsIndex)
+                }
+            }
+
+            SequentialAnimation {
+                id: shakeAnim
+                loops: Animation.Infinite
+                // shake only items that are not currently dragged
+                running: visualModel.itemHeld && !dragArea.held
+
+                RotationAnimation {
+                    target: dragItemRct
+                    to: 3
+                    duration: 120
+                }
+                RotationAnimation {
+                    target: dragItemRct
+                    to: -3
+                    duration: 120
+                }
+
+                onRunningChanged: {
+                    if ( !running ) {
+                        dragItemRct.rotation = 0
+                    }
                 }
             }
         }
