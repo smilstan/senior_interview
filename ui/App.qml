@@ -2,6 +2,8 @@ import QtQuick 2.13
 import QtQuick.Controls 2.13
 import QtQuick.Window 2.13
 
+import "./const/Colors.js" as Colors
+
 
 ApplicationWindow {
     id: application
@@ -15,7 +17,7 @@ ApplicationWindow {
     background: Rectangle {
         id: background
         anchors.fill: parent
-        color: "#242424"
+        color: Colors.dark
     }
 
     GridView {
@@ -35,10 +37,29 @@ ApplicationWindow {
 
     ChangeColorPopup {
         id: changeColorPopup
+    }
 
-        onClosed: {
-            if ( colorName != "" ) {
-                objectToChange.color = colorName
+    DownloadProgressPopup {
+        id: downloadProgressPopup
+        maxItemsCount: client.getMaxItemsCount()
+
+        onTerminateDownload: {
+            client.terminateDownloadProcess()
+        }
+    }
+
+    Connections {
+        target: client
+        onModelChanged: {
+            downloadProgressPopup.progressValue = client.model.length
+        }
+
+        onDownloadStateChanged: {
+            print(client.downloadState)
+            if ( client.downloadState ) {
+                downloadProgressPopup.open()
+            } else {
+                downloadProgressPopup.close()
             }
         }
     }

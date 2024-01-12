@@ -38,6 +38,7 @@ class MyModel(QAbstractListModel):
 
 
 class Client(QObject):
+    MAX_ITEMS_COUNT = 30
 
     def __init__(self):
         super().__init__()
@@ -45,28 +46,60 @@ class Client(QObject):
         # self._data = MyModel()
         self._timer = QTimer(self)
         self._timer.setInterval(200)
-        self._timer.timeout.connect(self.append_value)
+        self._timer.timeout.connect(self._append_value)
         self._timer.start()
-
-    def _model(self):
-        return self._data
+        self._download_state = False
 
     modelChanged = Signal()
-    model = Property('QVariant', _model, notify=modelChanged)
+    model = Property('QVariant',
+                     fget=lambda self: self._data,
+                     notify=modelChanged)
 
-    def append_value(self):
-        if len(self._data) > 2:
+    downloadStateChanged = Signal(bool)
+
+    @Property(bool, notify=downloadStateChanged)
+    def downloadState(self) -> bool:
+        return self._download_state
+
+    @downloadState.setter
+    def downloadState(self, value: bool):
+        self._download_state = value
+        self.downloadStateChanged.emit(value)
+
+
+    # downloadState = Property(bool,
+    #                          fget=lambda self: self._download_state,
+    #                          fset=lambda self, value: setattr(self, '_download_state', value),
+    #                          notify=downloadStateChanged)
+
+    # @downloadState.setter
+    # def downloadState(self, value):
+    #     self._download_state = value
+    #     self.downloadStateChanged.emit(value)
+
+    @Slot(result=int)
+    def getMaxItemsCount(self) -> int:
+        return self.MAX_ITEMS_COUNT
+
+    @Slot()
+    def terminateDownloadProcess(self):
+        self._timer.stop()
+        self.downloadState = False
+
+    def _append_value(self):
+        if not self._download_state:
+            print(1)
+            self.downloadState = True
+
+        if len(self._data) >= self.MAX_ITEMS_COUNT:
             self._timer.stop()
+            self.downloadState = False
             return
 
         color = random.choice(COLORS)
         self._data.append(color)
         self.modelChanged.emit()
 
-    # def append_value(self):
-    #     if self._data.rowCount() > 5:
-    #         self._timer.stop()
-    #         return
-    #
-    #     color = random.choice(COLORS)
-    #     self._data.append_data(color)
+
+
+

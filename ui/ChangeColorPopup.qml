@@ -2,39 +2,79 @@ import QtQuick 2.13
 import QtQuick.Controls 2.13
 import QtQuick.Layouts 1.2
 
+import "./const/Colors.js" as Colors
 
-Popup {
+
+APopup {
     id: root
-    implicitWidth: 200
-    implicitHeight: 100
-    modal: true
-    closePolicy: Popup.CloseOnPressOutside
-    anchors.centerIn: parent
+    headerText: "Enter new color"
 
-    readonly property alias colorName: textInput.text
-    property var objectToChange: null
+    property var colorChangeObj: null
 
     function init(itemObject) {
-        objectToChange = itemObject
+        colorChangeObj = itemObject
+        textInput.text = ""
         open()
     }
 
     contentItem: Item {
         id: content
-        anchors.fill: parent
+        implicitWidth: 200
+        implicitHeight: 100
 
-        RowLayout {
+        ColumnLayout {
+            id: contentLA
             anchors.fill: parent
 
-            Text {
-                id: lblTxt
-                text: "Color"
+            Rectangle {
+                width: 150
+                height: 30
+                border { width: 1 }
+                radius: 5
+                color: "transparent"
+                Layout.alignment: Qt.AlignHCenter
+                Layout.topMargin: 5
+
+                TextInput {
+                    id: textInput
+                    anchors.fill: parent
+                    horizontalAlignment: TextInput.AlignHCenter
+                    verticalAlignment: TextInput.AlignVCenter
+                    maximumLength: 15
+                }
             }
 
-            TextInput {
-                id: textInput
-                width: 50
-                height: 30
+            RowLayout {
+                id: buttonsLA
+                Layout.fillWidth: true
+                Layout.preferredHeight: parent.height / 2
+                Layout.alignment: Qt.AlignHCenter
+
+                Button {
+                    id: cancelBtn
+                    implicitWidth: 75
+                    implicitHeight: 30
+                    text: "Cancel"
+
+                    onClicked: {
+                        colorChangeObj = null
+                        close()
+                    }
+                }
+
+                Button {
+                    id: okBtn
+                    implicitWidth: 75
+                    implicitHeight: 30
+                    text: "Ok"
+
+                    onClicked: {
+                        if ( textInput.text.trim() != "" ) {
+                            colorChangeObj.color = textInput.text
+                        }
+                        close()
+                    }
+                }
             }
         }
     }

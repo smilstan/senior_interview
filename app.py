@@ -3,7 +3,7 @@ from pathlib import Path
 from PySide2 import QtWidgets, QtQml
 from PySide2.QtCore import QUrl
 
-from pyside.qml_playground.dragndrop.backend.model import Client
+from backend.model import Client
 
 
 class App:

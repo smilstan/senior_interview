@@ -19,6 +19,7 @@ DelegateModel {
             id: dragArea
             width: 75
             height: 75
+            acceptedButtons: Qt.LeftButton | Qt.RightButton
 
             drag.target: held ? dragItemRct : undefined
             drag.axis: Drag.XAndYAxis
@@ -36,8 +37,7 @@ DelegateModel {
             }
 
             onClicked: {
-                print(mouse.button)
-                if ( mouse.button == Qt.LeftButton ) {
+                if ( mouse.button == Qt.RightButton ) {
                     visualModel.changeColorRequest(dragItemRct)
                 }
             }
@@ -75,13 +75,13 @@ DelegateModel {
 
                     RotationAnimation {
                         target: dragItemRct
-                        to: 5
-                        duration: 100
+                        to: 3
+                        duration: 120
                     }
                     RotationAnimation {
                         target: dragItemRct
-                        to: -5
-                        duration: 100
+                        to: -3
+                        duration: 120
                     }
 
                     onRunningChanged: {
