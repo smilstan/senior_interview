@@ -8,8 +8,8 @@ import "./const/Colors.js" as Colors
 ApplicationWindow {
     id: application
 
-    width: 720
-    height: 480
+    width: 700
+    height: 500
 
     title: "Client App"
     visible: true
@@ -42,7 +42,7 @@ ApplicationWindow {
         maxItemsCount: client ? client.getMaxItemsCount() : 0
 
         onTerminateDownload: {
-            client.terminateDownloadProcess()
+            client.terminateModelSetup()
         }
     }
 

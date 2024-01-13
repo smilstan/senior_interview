@@ -1,59 +1,77 @@
-import random
+from PySide2.QtCore import QObject, Signal, Property, Slot, QTimer
 
-from PySide2.QtCore import QObject, Signal, Property, QAbstractListModel, Qt, QModelIndex, QTimer, Slot, \
-    QStringListModel
-from PySide2.QtWidgets import QListView
-
-COLORS = "red", "yellow", "gold", "green", "blue", "white", "black"
+from logger import app_logger as logger
+from backend.connector import TcpSocket
 
 
 class Client(QObject):
-    MAX_ITEMS_COUNT = 30
+    MAX_ITEMS_COUNT = 35
 
     def __init__(self):
         super().__init__()
-        self._data = []
-        self._download_state = False
+        self.data = []
+        self.download_state = False
+        self.model_setup_terminated = False
+        self.socket = TcpSocket(parent=self)
+        self.requestTimer = QTimer(parent=self)
+        self.requestTimer.setInterval(200)
+        self.requestTimer.timeout.connect(self.try_setup_model)
 
-        self._timer = QTimer(self)
-        self._timer.setInterval(100)
-        self._timer.timeout.connect(self._append_value)
-        self._timer.start()
-
+        self.manage_signals()
 
     modelChanged = Signal()
     model = Property('QVariant',
-                     fget=lambda self: self._data,
+                     fget=lambda self: self.data,
                      notify=modelChanged)
+
+    def update_model_with(self, value: str):
+        logger.debug(f'Update model with value: {value}')
+        self.data.append(value)
+        self.modelChanged.emit()
 
     downloadStateChanged = Signal(bool)
     downloadState = Property(bool,
-                             fget=lambda self: self._download_state,
-                             fset=lambda self, value: self._update_download_state(value),
+                             fget=lambda self: self.download_state,
+                             fset=lambda self, value: self.update_download_state(value),
                              notify=downloadStateChanged)
+
+    def update_download_state(self, value: bool):
+        self.download_state = value
+        self.downloadStateChanged.emit(value)
 
     @Slot(result=int)
     def getMaxItemsCount(self) -> int:
         return self.MAX_ITEMS_COUNT
 
-    @Slot()
-    def terminateDownloadProcess(self):
-        self._timer.stop()
+    def cclose(self):
+        print("cclose")
+        self.socket.close()
+
+    def setup_model(self):
+        logger.info("Start setup model")
+        self.requestTimer.start()
+        self.downloadState = True
+
+    def try_setup_model(self):
+        if self.model_setup_terminated:
+            logger.debug("Model setup finished: terminated")
+            self.stop_model_setup()
+        elif len(self.data) == self.MAX_ITEMS_COUNT:
+            logger.debug("Model setup finished: max size reached")
+            self.stop_model_setup()
+        else:
+            self.socket.send("next")
+
+    def stop_model_setup(self):
+        logger.info("Stop model setup")
+        self.requestTimer.stop()
         self.downloadState = False
+        self.socket.close()
 
-    def _append_value(self):
-        if not self._download_state:
-            self.downloadState = True
+    @Slot()
+    def terminateModelSetup(self):
+        self.model_setup_terminated = True
 
-        if len(self._data) >= self.MAX_ITEMS_COUNT:
-            self._timer.stop()
-            self.downloadState = False
-            return
-
-        color = random.choice(COLORS)
-        self._data.append(color)
-        self.modelChanged.emit()
-
-    def _update_download_state(self, value: bool):
-        self._download_state = value
-        self.downloadStateChanged.emit(value)
+    def manage_signals(self):
+        self.socket.connected.connect(self.setup_model)
+        self.socket.dataReceived.connect(self.update_model_with)

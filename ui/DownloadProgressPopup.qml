@@ -41,7 +41,6 @@ APopup {
 
                 onClicked: {
                     terminateDownload()
-//                    close()
                 }
             }
         }
