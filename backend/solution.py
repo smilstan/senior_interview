@@ -16,7 +16,6 @@ class Client(QObject):
         self.requestTimer = QTimer(parent=self)
         self.requestTimer.setInterval(200)
         self.requestTimer.timeout.connect(self.try_setup_model)
-        self.setup_model()
 
         self.manage_signals()
 
@@ -24,7 +23,7 @@ class Client(QObject):
         return f'<{self.__class__.__name__}>'
 
     def manage_signals(self):
-        self.socket.connected.connect(self.setup_model)
+        self.socket.connected.connect(self.start)
         self.socket.dataReceived.connect(self.update_model_with)
         self.socket.errorOccurred.connect(self.errorSignal.emit)
         self.socket.errorOccurred.connect(self.handle_socket_error)
@@ -59,7 +58,7 @@ class Client(QObject):
         logger.info("Releasing resources")
         self.socket.close()
 
-    def setup_model(self):
+    def start(self):
         logger.info("Start setup model")
         self.requestTimer.start()
         self.downloadState = True

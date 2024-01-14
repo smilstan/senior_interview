@@ -2,7 +2,7 @@ from pathlib import Path
 from PySide2 import QtWidgets, QtQml
 from PySide2.QtCore import QUrl
 
-from backend.model import Client
+from backend.solution import Client
 
 
 class App:
