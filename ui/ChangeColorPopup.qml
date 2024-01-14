@@ -9,10 +9,10 @@ APopup {
     id: root
     headerText: "Enter new color"
 
-    property var colorChangeObj: null
+    property var colorChangeItem: null   // item which color should be changed
 
     function init(itemObject) {
-        colorChangeObj = itemObject
+        colorChangeItem = itemObject
         textInput.text = ""
         open()
     }
@@ -57,7 +57,7 @@ APopup {
                     text: "Cancel"
 
                     onClicked: {
-                        colorChangeObj = null
+                        colorChangeItem = null
                         close()
                     }
                 }
@@ -70,7 +70,7 @@ APopup {
 
                     onClicked: {
                         if ( textInput.text.trim() != "" ) {
-                            colorChangeObj.color = textInput.text
+                            colorChangeItem.color = textInput.text
                         }
                         close()
                     }

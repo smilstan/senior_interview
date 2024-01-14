@@ -46,6 +46,10 @@ ApplicationWindow {
         }
     }
 
+    ErrorPopup {
+        id: errorPopup
+    }
+
     Connections {
         target: client
         onModelChanged: {
@@ -58,6 +62,10 @@ ApplicationWindow {
             } else {
                 downloadProgressPopup.close()
             }
+        }
+
+        onErrorSignal: {
+            errorPopup.init(errorMsg)
         }
     }
 }

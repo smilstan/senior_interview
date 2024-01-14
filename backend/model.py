@@ -16,8 +16,20 @@ class Client(QObject):
         self.requestTimer = QTimer(parent=self)
         self.requestTimer.setInterval(200)
         self.requestTimer.timeout.connect(self.try_setup_model)
+        self.setup_model()
 
         self.manage_signals()
+
+    def __repr__(self):
+        return f'<{self.__class__.__name__}>'
+
+    def manage_signals(self):
+        self.socket.connected.connect(self.setup_model)
+        self.socket.dataReceived.connect(self.update_model_with)
+        self.socket.errorOccurred.connect(self.errorSignal.emit)
+        self.socket.errorOccurred.connect(self.handle_socket_error)
+
+    errorSignal = Signal(str, arguments=['errorMsg'])
 
     modelChanged = Signal()
     model = Property('QVariant',
@@ -43,8 +55,8 @@ class Client(QObject):
     def getMaxItemsCount(self) -> int:
         return self.MAX_ITEMS_COUNT
 
-    def cclose(self):
-        print("cclose")
+    def release_resources(self):
+        logger.info("Releasing resources")
         self.socket.close()
 
     def setup_model(self):
@@ -72,6 +84,6 @@ class Client(QObject):
     def terminateModelSetup(self):
         self.model_setup_terminated = True
 
-    def manage_signals(self):
-        self.socket.connected.connect(self.setup_model)
-        self.socket.dataReceived.connect(self.update_model_with)
+    def handle_socket_error(self, error: str):
+        if self.downloadState:
+            self.terminateModelSetup()

@@ -14,29 +14,18 @@ class TcpSocket(QTcpSocket):
         logger.info(f"Trying to connect to {server_socket}")
         self.connectToHost(*server_socket)
 
+    def __repr__(self):
+        return f"<{self.__class__.__name__}>"
+
+    def manage_signals(self):
+        self.readyRead.connect(self.receive_data)
+        self.stateChanged.connect(self.handle_state_changed)
+
     def send(self, data: str):
         bdata = (data + "\n").encode('utf-8')
         super().write(bdata)
         self.flush()
         logger.debug(f"Data sent: {data}")
-
-    def close(self):
-        print("Closing")
-        if self.state() is self.SocketState.ConnectedState:
-            self.send('stop')
-        super().close()
-
-    def manage_signals(self):
-        self.readyRead.connect(self.receive_data)
-        self.stateChanged.connect(lambda state: print(state))
-        self.connected.connect(lambda: print("connected"))
-        self.disconnected.connect(self.handle_disconnect)
-
-    def handle_disconnect(self):
-        logger.debug("Handle disconnect event")
-        if self.error() is self.SocketError.RemoteHostClosedError:
-            self.lostConnection.emit()
-        logger.error(self.errorString())
 
     dataReceived = Signal(str)
 
@@ -46,3 +35,32 @@ class TcpSocket(QTcpSocket):
         sdata = data.decode('utf-8').strip()
         self.dataReceived.emit(sdata)
 
+    errorOccurred = Signal(str)
+
+    def handle_state_changed(self, state: QTcpSocket.SocketState):
+        logger.debug(f"{self} state changed on: {state}")
+        # handle UnconnectedState only
+        if state is not QTcpSocket.SocketState.UnconnectedState:
+            return
+
+        self.process_socket_error()
+
+    def process_socket_error(self):
+        # skip UnknownSocketError because it is a default return value of self.error()
+        if self.error() is QTcpSocket.SocketError.UnknownSocketError:
+            return
+
+        logger.debug(f"{self} error: {self.errorString()}")
+        error = "Unhandled socket error"
+        # handle error related to connection state
+        if self.error() in (QTcpSocket.SocketError.ConnectionRefusedError,
+                            QTcpSocket.SocketError.RemoteHostClosedError):
+            error = self.errorString()
+
+        self.errorOccurred.emit(error)
+
+    def close(self):
+        if self.state() is self.SocketState.ConnectedState:
+            self.send('stop')
+        super().close()
+        logger.info("Connection closed")
