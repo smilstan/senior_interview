@@ -3,6 +3,7 @@ import QtQuick.Controls 2.13
 import QtQuick.Window 2.13
 
 import "./const/Colors.js" as Colors
+import "./popup/"
 
 
 ApplicationWindow {

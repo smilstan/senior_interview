@@ -2,7 +2,7 @@ import QtQuick 2.13
 import QtQuick.Controls 2.13
 import QtQuick.Layouts 1.2
 
-import "./const/Colors.js" as Colors
+import "../const/Colors.js" as Colors
 
 
 Popup {
